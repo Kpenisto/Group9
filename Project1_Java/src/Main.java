@@ -28,6 +28,9 @@ public class Main {
     public static List<String> dealtCards = new ArrayList<>(); // List to hold the dealt cards
     public static Map<String, ImageIcon> cardImages = new HashMap<>(); // Map to hold card images
 
+    // Static flag to track if timestamp has been written
+    private static boolean timestampWritten = false;
+
     public static void main(String[] args) {
         System.out.println("Welcome to the Card Dealing Program!");
 
@@ -78,16 +81,23 @@ public class Main {
             return;
         }
 
-        System.out.print("Current working directory: " + System.getProperty("user.dir"));
-        
         try (PrintWriter outFile = new PrintWriter(new FileWriter("CardsDealt.txt", true))) {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
             Date currentTime = new Date();
-            outFile.println(dateFormat.format(currentTime));
-
-            for (String card : dealtCards) {
-                outFile.print(card + ", "); // Write each dealt card to the file
+            
+            if (!timestampWritten) {
+                outFile.println(dateFormat.format(currentTime));
+                timestampWritten = true; // Set flag to true after writing the timestamp
             }
+
+            // Write each dealt card to the file
+            for (int i = 0; i < dealtCards.size(); i++) {
+                outFile.print(dealtCards.get(i));
+                if (i < dealtCards.size() - 1) {
+                    outFile.print(","); // Add a comma and space if it's not the last card
+                }
+            }
+
             outFile.println();
         } catch (IOException e) {
             System.err.println("Error opening file"); // Handle file writing errors
@@ -136,7 +146,7 @@ class CardGameGUI extends JFrame {
     private JScrollPane scrollPane; // ScrollPane to hold the cardPanel
     private JLabel welcomeLabel; // JLabel for the welcome message
 
-    private List<String> dealtCards; // Class-level variable to store dealt cards
+    private List<String> dealtCards = new ArrayList<>(); // Initialize dealtCards to an empty list
 
     // Constructor to initialize the GUI components
     public CardGameGUI() {
@@ -205,13 +215,10 @@ class CardGameGUI extends JFrame {
             }
         }
         pack(); // Adjust layout
-
-        Main.recordDealtCards(dealtCards); // Record the dealt cards
     }
 
     // Method to quit the game
     private void quitGame() {
-        Main.recordDealtCards(dealtCards); // Record the dealt cards
         System.out.println("Thanks for playing! Goodbye!"); // Print a message to the console
         System.exit(0); // Exit the program
     }
