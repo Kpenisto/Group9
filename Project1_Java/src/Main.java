@@ -2,6 +2,10 @@
   Author: Kyle Pensiton
   Date: February 8, 2024
   
+  Team Members: Kris Bosco, Jesse Gemple, Karlin Clabon-Barnes
+
+  Class: CMP_SCI-4500 Keith Miller
+
   Project Title: Random Card Selection Program
   
   Description:
@@ -142,16 +146,18 @@ public class Main {
 class CardGameGUI extends JFrame {
     private JPanel cardPanel;
     private JButton dealButton;
+    private JButton selectButton;
     private JButton quitButton;
     private JScrollPane scrollPane; // ScrollPane to hold the cardPanel
     private JLabel welcomeLabel; // JLabel for the welcome message
 
     private List<String> dealtCards = new ArrayList<>(); // Initialize dealtCards to an empty list
+    private List<String> selectedCards = new ArrayList<>(); // Initialize selectedCards to an empty list
 
     // Constructor to initialize the GUI components
     public CardGameGUI() {
         setTitle("Card Dealing Program");
-        setSize(300, 200);
+        setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         initComponents(); // Initialize the GUI components
@@ -165,16 +171,56 @@ class CardGameGUI extends JFrame {
         cardPanel.setLayout(new FlowLayout());
         scrollPane = new JScrollPane(cardPanel); // Wrap the cardPanel in a JScrollPane
 
+
         dealButton = new JButton("Deal Cards");
+        selectButton = new JButton("Select Cards"); // Initialize the selectButton        
         quitButton = new JButton("Quit");
-        welcomeLabel = new JLabel("Welcome to the Card Dealing Program! Press 'Deal Cards' to start or 'Quit' to exit."); // Initialize the welcome message label
+        welcomeLabel = new JLabel("<html><body>Card Dealing Program. Built With Java<br><br>" + 
+        "Produced by: Kyle Peniston<br>" + 
+        "Creation Date: February 8, 2024<br><br>" +
+        "Team Members: Kris Bosco, Jesse Gemple, Karlin Clabon-Barnes<br>" +
+        "CMP_SCI-4500 Keith Miller<br><br>" + 
+        "This program generates a random playing card from a standard deck of 52 cards.<br>" +
+        "The central data structure in this program is the List &lt String &gt deck, which represents the deck of playing cards" +
+        "</body></html>"); // Initialize the welcome message label
 
         // ActionListener for the dealButton
-        dealButton.addActionListener(new ActionListener() {
+        selectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dealtCards = Main.dealCards(); // Deal cards
-                displayDealtCards(dealtCards); // Display the dealt cards
+                String input = JOptionPane.showInputDialog("Enter four cards, separated by commas (e.g., 2H, 3D, 4S, 5C):");
+                if (input == null || input.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Please enter four cards.");
+                    return;
+                }
+
+                String[] cardsArray = input.split(",");
+                if (cardsArray.length != 4) {
+                    JOptionPane.showMessageDialog(null, "Please enter exactly four cards.");
+                    return;
+                }
+
+                // Check for unique cards in the set of 4
+                for (int i = 0; i < cardsArray.length; i++) {
+                    for (int j = i + 1; j < cardsArray.length; j++) {
+                        if (cardsArray[i].trim().equals(cardsArray[j].trim())) {
+                            JOptionPane.showMessageDialog(null, "Please enter four unique cards.");
+                            return;
+                        }
+                    }
+                }
+
+                // Trim whitespace from each card and add to selectedCards list
+                selectedCards.clear();
+                for (String card : cardsArray) {
+                    selectedCards.add(card.trim());
+                }
+
+                //dealtCards = Main.dealCards(); // Deal cards
+                //displayDealtCards(dealtCards); // Display the dealt cards
+                welcomeLabel.setText("Card Dealing Program - Press 'Deal Cards' to start or 'Quit' to exit.");
+                displaySelectedCards(selectedCards); // Display the dealt cards
+                Main.recordDealtCards(selectedCards);
             }
         });
 
@@ -190,7 +236,8 @@ class CardGameGUI extends JFrame {
     // Method to layout the GUI components
     private void layoutComponents() {
         JPanel buttonPanel = new JPanel();
-        buttonPanel.add(dealButton);
+        //buttonPanel.add(dealButton);
+        buttonPanel.add(selectButton);
         buttonPanel.add(quitButton);
 
         getContentPane().setLayout(new BorderLayout());
@@ -214,6 +261,25 @@ class CardGameGUI extends JFrame {
                 cardPanel.add(label); // Add the JLabel to the cardPanel
             }
         }
+        pack(); // Adjust layout
+    }
+
+    // Method to display the selected cards
+    private void displaySelectedCards(List<String> cards) {
+        // Clear existing cards
+        cardPanel.removeAll();
+        cardPanel.revalidate();
+        cardPanel.repaint();
+
+        // Display selected cards
+        for (String card : cards) {
+            ImageIcon cardImage = Main.cardImages.get(card); // Get the image for the card
+            if (cardImage != null) {
+                JLabel label = new JLabel(cardImage); // Create a JLabel with the image
+                cardPanel.add(label); // Add the JLabel to the cardPanel
+            }
+        }
+
         pack(); // Adjust layout
     }
 
