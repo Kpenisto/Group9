@@ -1,19 +1,26 @@
 /*
   Author: Kyle Pensiton
-  Date: February 8, 2024
+  Creation Date: February 8, 2024
+
+  Revised by:
+  Kyle Peniston - March 8th, 2024 - To include specifications for HW3
   
   Team Members: Kris Bosco, Jesse Gemple, Karlin Clabon-Barnes
 
   Class: CMP_SCI-4500 Keith Miller
 
-  Project Title: Random Card Selection Program
+  Project Title: Card Selection Program
   
   Description:
-  This program generates a random playing card from a standard deck of 52 cards. 
-  It utilizes the random module to select a random suit (hearts, diamonds, clubs, spades)
-  and a random rank (Ace through King). The selected cards are then displayed to the user. 
+  This program generates selected playing cards from a standard deck of 52 cards. 
+  It utilizes user input to select card suits (hearts, diamonds, clubs, spades)
+  and card ranks (Ace through King). The selected cards are then displayed to the user. 
   The program also includes a GUI interface where users can deal cards and view the dealt cards.
   Dealt cards are recorded in a text file, CardsDealt.txt, along with the timestamp of the deal.
+
+  Credit:
+  Code examples and tutorials from W3schools, Stack Overflow, and GeeksforGeeks
+  were used in the development of this program.
 */
 
 import javax.swing.*;
@@ -31,6 +38,7 @@ public class Main {
     private static List<String> deck = new ArrayList<>(); // List to hold the cards in the deck
     public static List<String> dealtCards = new ArrayList<>(); // List to hold the dealt cards
     public static Map<String, ImageIcon> cardImages = new HashMap<>(); // Map to hold card images
+
 
     // Static flag to track if timestamp has been written
     private static boolean timestampWritten = false;
@@ -145,14 +153,10 @@ public class Main {
 // GUI class for the card game
 class CardGameGUI extends JFrame {
     private JPanel cardPanel;
-    private JButton dealButton;
     private JButton selectButton;
     private JButton quitButton;
-    private JScrollPane scrollPane; // ScrollPane to hold the cardPanel
     private JLabel welcomeLabel; // JLabel for the welcome message
-
-    private List<String> dealtCards = new ArrayList<>(); // Initialize dealtCards to an empty list
-    private List<String> selectedCards = new ArrayList<>(); // Initialize selectedCards to an empty list
+    public List<String> selectedCards = new ArrayList<>(); // Initialize selectedCards to an empty list
 
     // Constructor to initialize the GUI components
     public CardGameGUI() {
@@ -169,10 +173,7 @@ class CardGameGUI extends JFrame {
     private void initComponents() {
         cardPanel = new JPanel();
         cardPanel.setLayout(new FlowLayout());
-        scrollPane = new JScrollPane(cardPanel); // Wrap the cardPanel in a JScrollPane
 
-
-        dealButton = new JButton("Deal Cards");
         selectButton = new JButton("Select Cards"); // Initialize the selectButton        
         quitButton = new JButton("Quit");
         welcomeLabel = new JLabel("<html><body>Card Dealing Program. Built With Java<br><br>" + 
@@ -188,39 +189,48 @@ class CardGameGUI extends JFrame {
         selectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String input = JOptionPane.showInputDialog("Enter four cards, separated by commas (e.g., 2H, 3D, 4S, 5C):");
+                String input = JOptionPane.showInputDialog("Enter a card (e.g., 2H, 3D, 4S, 5C):");
                 if (input == null || input.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Please enter four cards.");
+                    JOptionPane.showMessageDialog(null, "Please enter a card.");
                     return;
                 }
 
-                String[] cardsArray = input.split(",");
-                if (cardsArray.length != 4) {
-                    JOptionPane.showMessageDialog(null, "Please enter exactly four cards.");
+                String[] cardsArray = input.toUpperCase().split(",");
+                if (cardsArray.length != 1) {
+                    JOptionPane.showMessageDialog(null, "Please enter exactly 1 card at a time.");
                     return;
                 }
 
-                // Check for unique cards in the set of 4
-                for (int i = 0; i < cardsArray.length; i++) {
-                    for (int j = i + 1; j < cardsArray.length; j++) {
-                        if (cardsArray[i].trim().equals(cardsArray[j].trim())) {
-                            JOptionPane.showMessageDialog(null, "Please enter four unique cards.");
-                            return;
-                        }
-                    }
+                // Redisplay UI if there are 4 selected cards
+                if (selectedCards.size() == 4) {
+                    selectedCards.clear();
+                    cardPanel.removeAll();
+                    cardPanel.revalidate();
+                    cardPanel.repaint();
                 }
 
-                // Trim whitespace from each card and add to selectedCards list
-                selectedCards.clear();
-                for (String card : cardsArray) {
-                    selectedCards.add(card.trim());
+                String selectedCard = cardsArray[0].trim();
+
+                // Check if the selected card has already been selected
+                if (selectedCards.contains(selectedCard)) {
+                    JOptionPane.showMessageDialog(null, "You have already selected this card.");
+                    return;
                 }
 
-                //dealtCards = Main.dealCards(); // Deal cards
-                //displayDealtCards(dealtCards); // Display the dealt cards
-                welcomeLabel.setText("Card Dealing Program - Press 'Deal Cards' to start or 'Quit' to exit.");
-                displaySelectedCards(selectedCards); // Display the dealt cards
-                Main.recordDealtCards(selectedCards);
+                // Display the selected card
+                displaySelectedCard(selectedCard);
+
+                // Add selected card to group set
+                selectedCards.add(selectedCard);
+
+                // Update Directions
+                welcomeLabel.setText("<html><body>Card Dealing Program - Press 'Select Cards' to start or 'Quit' to exit.<br>Display up to 4 cards</html></body>");
+
+                // If there are 4 selected cards, deal them and display them
+                if (selectedCards.size() == 4) {
+                    displaySelectedCards(selectedCards); // Display the dealt cards
+                    Main.recordDealtCards(selectedCards);
+                }
             }
         });
 
@@ -246,24 +256,6 @@ class CardGameGUI extends JFrame {
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    // Method to display the dealt cards
-    private void displayDealtCards(List<String> cards) {
-        // Clear existing cards
-        cardPanel.removeAll();
-        cardPanel.revalidate();
-        cardPanel.repaint();
-
-        // Display dealt cards
-        for (String card : cards) {
-            ImageIcon cardImage = Main.cardImages.get(card); // Get the image for the card
-            if (cardImage != null) {
-                JLabel label = new JLabel(cardImage); // Create a JLabel with the image
-                cardPanel.add(label); // Add the JLabel to the cardPanel
-            }
-        }
-        pack(); // Adjust layout
-    }
-
     // Method to display the selected cards
     private void displaySelectedCards(List<String> cards) {
         // Clear existing cards
@@ -283,9 +275,21 @@ class CardGameGUI extends JFrame {
         pack(); // Adjust layout
     }
 
+    // Method to display the selected card
+    private void displaySelectedCard(String card) {
+        // Display the selected card
+        ImageIcon cardImage = Main.cardImages.get(card); // Get the image for the card
+        if (cardImage != null) {
+            JLabel label = new JLabel(cardImage); // Create a JLabel with the image
+            cardPanel.add(label); // Add the JLabel to the cardPanel
+            pack(); // Adjust layout
+        }
+    }
+
     // Method to quit the game
     private void quitGame() {
         System.out.println("Thanks for playing! Goodbye!"); // Print a message to the console
+        JOptionPane.showMessageDialog(null, "Thanks for playing! Goodbye!");
         System.exit(0); // Exit the program
     }
 }
